@@ -1,5 +1,8 @@
-transformers==4.47.0
-datasets==3.2.0
-accelerate==1.2.1
-evaluate==0.4.3
-torch==2.5.1+cu121
+transformers
+datasets
+gcsfs
+accelerate
+evaluate
+torch
+jedi
+pycairo

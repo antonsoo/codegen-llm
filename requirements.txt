@@ -5,4 +5,3 @@ accelerate
 evaluate
 torch
 jedi
-pycairo

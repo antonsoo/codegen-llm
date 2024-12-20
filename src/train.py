@@ -1,63 +1,53 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForLanguageModeling
-from src.data_prep import load_and_preprocess_data
+from datasets import load_from_disk, Dataset  # Import load_from_disk
+from data_prep import create_subset_dataset
 import torch
 
 def train_model(
-        model_name="codellama/CodeLlama-7b-hf",
+        model_name="salesforce/codegen-350m-multi",#"salesforce/codegen-2b-multi", #"codellama/CodeLlama-7b-hf",
         dataset_name="bigcode/the-stack",
         data_dir="data/python",
         output_dir="./results",
         num_train_epochs=3,
-        per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
+        per_device_train_batch_size=1, #4,
+        per_device_eval_batch_size=1, #4,
         evaluation_strategy="epoch",
         save_strategy="epoch",
         logging_dir="./logs",
-        gradient_accumulation_steps=4,
+        gradient_accumulation_steps=16, #4,
         learning_rate=2e-5,
         weight_decay=0.01,
-        push_to_hub=False,  # Set to True if you want to push to the Hugging Face Hub
-        **kwargs  # Additional keyword arguments for Trainer
+        gradient_checkpointing=True,
+        fp16=True,
+        #bf16=True,
+        push_to_hub=False,
+        **kwargs
 ):
-    """Trains the code generation model.
-
-    Args:
-        model_name: The name of the pretrained model to use.
-        dataset_name: Name of the dataset on Hugging Face Hub.
-        data_dir: Specific directory within the dataset.
-        output_dir: Where to save the trained model.
-        num_train_epochs: Number of training epochs.
-        per_device_train_batch_size: Batch size for training.
-        per_device_eval_batch_size: Batch size for evaluation.
-        evaluation_strategy: When to evaluate during training ("steps" or "epoch").
-        save_strategy: When to save the model ("steps" or "epoch").
-        logging_dir: Where to store training logs.
-        gradient_accumulation_steps: Number of steps to accumulate gradients before updating.
-        learning_rate: The initial learning rate.
-        weight_decay: Weight decay for regularization.
-        push_to_hub: Whether to push the trained model to the Hugging Face Hub.
-        **kwargs: Additional keyword arguments for the Trainer.
-
-    Returns:
-        None
-    """
+    """Trains the code generation model."""
 
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # Set pad token if it's not defined
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(model_name)
 
-    # Load and preprocess data
-    train_dataset = load_and_preprocess_data(
-        dataset_name=dataset_name, data_dir=data_dir, split="train", model_name=model_name
+    # Create a subset of the dataset for training and evaluation
+    subset_dir = create_subset_dataset(
+        dataset_name=dataset_name,
+        data_dir=data_dir,
+        model_name=model_name,
+        num_shards=5,
+        subset_size=10000  # You can adjust the subset size
     )
-    # Assuming you have a validation set
-    eval_dataset = load_and_preprocess_data(
-        dataset_name=dataset_name, data_dir=data_dir, split="validation", model_name=model_name
-    )
+
+    # Load the subset dataset from disk
+    subset_dataset = load_from_disk(subset_dir)
+
+    # Split the subset dataset into training and evaluation sets
+    train_test_split = subset_dataset.train_test_split(test_size=0.1, seed=42)
+    train_dataset = train_test_split["train"]
+    eval_dataset = train_test_split["test"]
 
     # Define training arguments
     training_args = TrainingArguments(
@@ -72,7 +62,7 @@ def train_model(
         learning_rate=learning_rate,
         weight_decay=weight_decay,
         push_to_hub=push_to_hub,
-        **kwargs  # Pass any additional keyword arguments to the Trainer
+        **kwargs
     )
 
     # Data collator for language modeling
@@ -97,3 +87,4 @@ def train_model(
 
 if __name__ == "__main__":
     train_model()
+

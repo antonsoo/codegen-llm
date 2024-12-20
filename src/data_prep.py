@@ -72,6 +72,6 @@ def create_subset_dataset(dataset_name="bigcode/the-stack", data_dir="data/pytho
     return subset_dir
 
 if __name__ == "__main__":
-    model_name = "codellama/CodeLlama-7b-hf"
+    model_name = "salesforce/codegen-350m-multi"
     subset_dir = create_subset_dataset(model_name=model_name, num_shards=5, subset_size=10000)
                                                                                                          

@@ -4,4 +4,5 @@ gcsfs
 accelerate
 evaluate
 torch
+gradio
 jedi

@@ -4,7 +4,7 @@ from data_prep import create_subset_dataset
 import torch
 
 def train_model(
-        model_name="salesforce/codegen-350m-multi",#"salesforce/codegen-2b-multi", #"codellama/CodeLlama-7b-hf",
+        model_name="salesforce/codegen-350m-multi", #"codellama/CodeLlama-7b-hf",
         dataset_name="bigcode/the-stack",
         data_dir="data/python",
         output_dir="./results",

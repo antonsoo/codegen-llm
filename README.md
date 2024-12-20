@@ -22,11 +22,11 @@ This project focuses on fine-tuning a large language model (LLM) for code genera
 
 ## Dataset
 
-(This section is to be updated.)
+The Stack: https://huggingface.co/datasets/bigcode/the-stack
 
 ## Model
 
-(This section is to be updated.)
+salesforce/codegen-350m-multi
 
 ## Contact
 
